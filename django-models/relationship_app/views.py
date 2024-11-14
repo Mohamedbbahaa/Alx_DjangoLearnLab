@@ -3,8 +3,8 @@ from relationship_app.models import Book, Library
 from django.views.generic import DetailView
 
 def book_list_view(request):
-    books = Book.objects.select_related('author').all()
-    return render(request, 'relationship_app/book_list.html', {'books' : books})
+    books = Book.objects.all()
+    return render(request, 'relationship_app/lit_books.html', {'books' : books})
 # Create your views here.
 
 class LibraryDetailView(DetailView):
