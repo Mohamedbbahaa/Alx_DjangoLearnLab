@@ -7,7 +7,8 @@ from django.urls import reverse_lazy
 from django.views.generic import CreateView
 from django.contrib.auth import login
 from django.contrib.auth.views import LoginView
-from django.contrib.auth.decorators import user_passes_test, permission_required
+from django.contrib.auth.decorators import user_passes_test
+from django.contrib.auth.decorators import permission_required
 from django.http import HttpResponseForbidden
 
 
@@ -59,7 +60,7 @@ def member_view(request):
 
 @permission_required('relationship_app.can_add_book', raise_exception=True)
 def add_book(request):
-    if request.method == 'POST'
+    if request.method == 'POST':
         form = BookForm(request.POST)
         if form.is_valid():
             form.save()
