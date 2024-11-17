@@ -20,10 +20,10 @@ from django.urls import path, include
 urlpatterns = [
     path('', admin.site.urls),
     path('relationship_app/', include('relationship_app.urls')),
-    path('', include('relationship_app.urls')),
+    path('books/', include('relationship_app.urls'), name='book_list'),
     path('accounts/', include('django.contrib.auth.urls')),
     #path('accounts/profile/', TemplateView.as_view(template_name='accounts/profile.html'), name='profile'),
-    path('register/', include('relationship_app.urls'), name='register'),
+    path('register/', include('relationship_app.urls'), name='views.register'),
     path('login/', include('relationship_app.urls'), name='login'),
     path('logout/', include('relationship_app.urls'), name='logout'),
 ]
