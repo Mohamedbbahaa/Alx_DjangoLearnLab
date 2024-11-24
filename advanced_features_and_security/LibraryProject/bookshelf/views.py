@@ -5,6 +5,7 @@ from django.contrib.auth.decorators import permission_required
 from django.http import HttpResponse
 from bookshelf.models import Book
 from .forms import SearchForm
+from .forms import ExampleForm
 
 def search_books(request):
     form = SearchForm(request.GET or None)
