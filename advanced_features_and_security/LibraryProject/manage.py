@@ -20,3 +20,19 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+from django.contrib.auth.models import Group, Permission
+from bookshelf.models import Book
+
+# Define groups
+groups = {
+    "Editors": ["can_create", "can_edit"],
+    "Viewers": ["can_view"],
+    "Admins": ["can_create", "can_edit", "can_view", "can_delete"],
+}
+
+for group_name, perms in groups.items():
+    group, created = Group.objects.get_or_create(name=group_name)
+    for perm in perms:
+        permission = Permission.objects.get(codename=perm, content_type__app_label="bookshelf", content_type__model="book")
+        group.permissions.add(permission)
