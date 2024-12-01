@@ -2,12 +2,15 @@ from django.test import TestCase
 from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 from .models import Book, Author
+from django.contrib.auth.models import User
 
 class BookAPITests(TestCase):
     def setUp(self):
         """
         Set up test data and client before each test.
         """
+        self.client = APIClient()
+        self.user = User.objects.create_user(username='testuser', password='testpassword')
         self.author = Author.objects.create(name="J.K. Rowling")
         self.book = Book.objects.create(
             title="Harry Potter and the Sorcerer's Stone",
@@ -106,3 +109,14 @@ class BookAPITests(TestCase):
         # Ensure unauthorized access is blocked for creation
         data = {"title": "Unauthorized Book", "publication_year": 2000, "author": self.author.id}
         response = self.client.post(self.book_url
+
+    def test_create_book_with_authentication(self):
+        self.client.login(username='testuser', password='testpassword')
+        data = {
+            "title": "Harry Potter and the Chamber of Secrets",
+            "publication_year": 1998,
+            "author": self.author.id,
+        }
+        response = self.client.post(self.book_url, data, format="json")
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Book.objects.count(), 2)
