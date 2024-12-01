@@ -1,5 +1,5 @@
 from django.test import TestCase
-from rest_framework.test import APIClient
+from rest_framework.test import APIClient, APITestCase
 from rest_framework import status
 from .models import Book, Author
 
@@ -8,7 +8,6 @@ class BookAPITests(TestCase):
         """
         Set up test data and client before each test.
         """
-        self.client = APIClient()
         self.author = Author.objects.create(name="J.K. Rowling")
         self.book = Book.objects.create(
             title="Harry Potter and the Sorcerer's Stone",
