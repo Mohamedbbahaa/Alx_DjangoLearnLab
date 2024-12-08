@@ -77,9 +77,9 @@ WSGI_APPLICATION = 'django_blog.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'blog',
-        'USER' : 'blog',
-        'PASSWORD' : 'admin',
+        'NAME': 'django_blog',
+        'USER' : 'django_user',
+        'PASSWORD' : 'blog1234',
         'HOST' : 'localhost',
         'PORT' : '5432',
     }
@@ -130,3 +130,6 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_REDIRECT_URL = '/blog'
+LOGOUT_REDIRECT_URL = 'login/'
