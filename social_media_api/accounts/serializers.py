@@ -1,8 +1,8 @@
 from rest_framework import serializers
 from .models import User
-from django.contrib.auth import authenticate
+from django.contrib.auth import authenticate, get_user_model
 from rest_framework.authtoken.models import Token
-
+ User =get_user_model()
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -17,13 +17,12 @@ class UserSerializer(serializers.ModelSerializer):
             password=validated_data['password'],
         )
         
-        # Create a token for the new user
-        Token.objects.create(user=user)
-        
         # Add optional fields like bio and profile_picture
         user.bio = validated_data.get('bio', '')
         user.profile_picture = validated_data.get('profile_picture', None)
         user.save()
+
+        Token.objects.create(user=user)
         
         return user
 
