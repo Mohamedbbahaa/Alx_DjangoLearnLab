@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework import status
 from .models import User
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
+from django.contrib.auth import logout
 # Create your views here.
 
 
@@ -38,3 +39,13 @@ class ProfileView(APIView):
         user = request.user
         serializer = UserSerializer(user)
         return Response(serializer.data)
+
+class LogoutView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return render(request, 'logout.html')
+
+    def post(self, request):
+        logout(request)
+        return Response(status=status.HTTP_204_NO_CONTENT)
