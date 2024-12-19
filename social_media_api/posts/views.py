@@ -3,7 +3,8 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view
 from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
-from rest_framework import status, viewsets, permissions
+from rest_framework import status, viewsets, permissions, filters
+from .permissions import IsOwnerOrReadOnly
 # Create your views here.
 
 @api_view(['GET'])
@@ -31,7 +32,10 @@ class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['title', 'content']
 
+    
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
