@@ -53,7 +53,7 @@ class PostViewSet(viewsets.ModelViewSet):
     def like(self, request, pk=None):
         post = generics.get_object_or_404(Post, pk=pk)
         user = request.user
-        like, created = Like.objects.get_or_create(user=user, post=post)
+        like, created = Like.objects.get_or_create(user=request.user, post=post)
         if not created:
             return Response({"detail": "You already liked this post."}, status=status.HTTP_400_BAD_REQUEST)
         Notification.objects.create(
