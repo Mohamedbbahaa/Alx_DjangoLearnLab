@@ -11,4 +11,5 @@ urlpatterns = [
     #path('create-post/', views.createPost, name='create-post'),
     #path('comments-details/', views.commentData, name='comments'),
     path('', include(router.urls)),
+    path('feed/', views.FeedView.as_view(), name='feed'),
 ]

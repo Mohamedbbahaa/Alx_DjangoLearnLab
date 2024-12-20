@@ -49,3 +49,31 @@ class LogoutView(APIView):
     def post(self, request):
         logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+class follow_user(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, user_id):
+        try: 
+            user = User.objects.get(id=user_id)
+            if user == request.user:
+                return Response({"error": "You cannot follow yourself"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                request.user.following.add(user)
+                return Response(status=status.HTTP_204_NO_CONTENT)
+        except User.DoesNotExist:
+            return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
+    
+class unfollow_user(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, user_id):
+        try: 
+            if user_id == request.user.id:
+                return Response({"error": "You cannot unfollow yourself"}, status=status.HTTP_400_BAD_REQUEST)
+            else:
+                user = User.objects.get(id=user_id)
+                request.user.following.remove(user)
+                return Response(status=status.HTTP_204_NO_CONTENT)
+        except User.DoesNotExist:
+            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)

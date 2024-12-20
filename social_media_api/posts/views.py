@@ -5,6 +5,8 @@ from .models import Post, Comment
 from .serializers import PostSerializer, CommentSerializer
 from rest_framework import status, viewsets, permissions, filters
 from .permissions import IsOwnerOrReadOnly
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView
 # Create your views here.
 
 @api_view(['GET'])
@@ -35,7 +37,7 @@ class PostViewSet(viewsets.ModelViewSet):
     filter_backends = [filters.SearchFilter]
     search_fields = ['title', 'content']
 
-    
+
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
@@ -56,3 +58,13 @@ class CommentViewSet(viewsets.ModelViewSet):
         if self.action in ['update', 'partial_update', 'destroy']:
             self.permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
         return super().get_permissions()
+    
+class FeedView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        following_users = user.following.all()
+        posts = Post.objects.filter(author__in=following_users).order_by('-created_at')
+        serializer = PostSerializer(posts, many=True)
+        return Response(serializer.data)
