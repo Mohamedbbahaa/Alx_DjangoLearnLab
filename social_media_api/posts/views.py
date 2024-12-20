@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, action
 from .models import Post, Comment, Like
 from .serializers import PostSerializer, CommentSerializer, LikeSerializer
-from rest_framework import status, viewsets, permissions, filters
+from rest_framework import status, viewsets, permissions, filters, generics
 from .permissions import IsOwnerOrReadOnly
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -51,15 +51,15 @@ class PostViewSet(viewsets.ModelViewSet):
     
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
     def like(self, request, pk=None):
-        post = self.get_object()
+        post = generics.get_object_or_404(Post, pk=pk)
         user = request.user
-        if Like.objects.filter(post=post, user=user).exists():
-            return Response({"detail": "You have already liked this post"}, status=status.HTTP_400_BAD_REQUEST)
-        Like.objects.create(post=post, user=user)
+        like, created = Like.objects.get_or_create(user=user, post=post)
+        if not created:
+            return Response({"detail": "You already liked this post."}, status=status.HTTP_400_BAD_REQUEST)
         Notification.objects.create(
             recipient=post.author,
             actor=user,
-            verb='{actor} liked your post',
+            verb='liked your post',
             target=post
         )
         return Response(status=status.HTTP_201_CREATED)
