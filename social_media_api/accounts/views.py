@@ -8,9 +8,9 @@ from .models import User
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 from django.contrib.auth import logout
 from rest_framework import generics
+from rest_framework.permissions import IsAuthenticated
+from notifications.models import Notification
 # Create your views here.
-
-
 
 class RegisterView(APIView):
     def post(self, request):
@@ -51,34 +51,35 @@ class LogoutView(APIView):
         logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)
     
-class follow_user(generics.GenericAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+class FollowUser(APIView):
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, user_id):
-        try: 
+        try:
             user = User.objects.get(id=user_id)
-            if user == request.user:
-                return Response({"error": "You cannot follow yourself"}, status=status.HTTP_400_BAD_REQUEST)
-            else:
+            if user != request.user:
                 request.user.following.add(user)
+                Notification.objects.create(
+                    recipient=user,
+                    actor=request.user,
+                    verb='started following you'
+                )
                 return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response({"detail": "You cannot follow yourself."}, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:
-            return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
-    
-class unfollow_user(generics.GenericAPIView):
-    permission_classes = [permissions.IsAuthenticated]
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
+
+class UnfollowUser(APIView):
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, user_id):
-        try: 
-            if user_id == request.user.id:
-                return Response({"error": "You cannot unfollow yourself"}, status=status.HTTP_400_BAD_REQUEST)
-            else:
-                user = User.objects.get(id=user_id)
+        try:
+            user = User.objects.get(id=user_id)
+            if user != request.user:
                 request.user.following.remove(user)
                 return Response(status=status.HTTP_204_NO_CONTENT)
+            else:
+                return Response({"detail": "You cannot unfollow yourself."}, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:
-            return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
-        
-
-
-#CustomUser.objects.all()
+            return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)

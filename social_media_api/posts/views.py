@@ -1,12 +1,14 @@
 from django.shortcuts import render
 from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from .models import Post, Comment
-from .serializers import PostSerializer, CommentSerializer
+from rest_framework.decorators import api_view, action
+from .models import Post, Comment, Like
+from .serializers import PostSerializer, CommentSerializer, LikeSerializer
 from rest_framework import status, viewsets, permissions, filters
 from .permissions import IsOwnerOrReadOnly
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
+from notifications.models import Notification
+from notifications.serializers import NotificationSerializer
 # Create your views here.
 
 @api_view(['GET'])
@@ -30,6 +32,7 @@ def commentData(request):
     serializer = CommentSerializer(comment, many=True)
     return Response(serializer.data)
 
+
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostSerializer
@@ -46,19 +49,59 @@ class PostViewSet(viewsets.ModelViewSet):
             self.permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
         return super().get_permissions()
     
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def like(self, request, pk=None):
+        post = self.get_object()
+        user = request.user
+        if Like.objects.filter(post=post, user=user).exists():
+            return Response({"detail": "You have already liked this post"}, status=status.HTTP_400_BAD_REQUEST)
+        Like.objects.create(post=post, user=user)
+        Notification.objects.create(
+            recipient=post.author,
+            actor=user,
+            verb='{actor} liked your post',
+            target=post
+        )
+        return Response(status=status.HTTP_201_CREATED)
+    
+    @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated])
+    def unlike(self, request, pk=None):
+        post = self.get_object()
+        user = request.user
+        try:
+            like = Like.objects.get(post=post, user=user)
+            like.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Like.DoesNotExist:
+            return Response({"detail": "You have not liked this post"}, status=status.HTTP_400_BAD_REQUEST)
+
+    
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
     permission_classes = [permissions.IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
-        serializer.save(author=self.request.user)
-
+        comment = serializer.save(author=self.request.user)
+        Notification.objects.create(
+            recipient=comment.post.author,
+            actor=comment.author,
+            verb='commented on your post',
+            target=comment.post
+        )
+        
     def get_permissions(self):
         if self.action in ['update', 'partial_update', 'destroy']:
             self.permission_classes = [permissions.IsAuthenticated, IsOwnerOrReadOnly]
         return super().get_permissions()
-    
+
+
+class LikeViewSet(viewsets.ModelViewSet):
+    queryset = Like.objects.all()
+    serializer_class = LikeSerializer
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
+
+
 class FeedView(APIView):
     permission_classes = [IsAuthenticated]
 
