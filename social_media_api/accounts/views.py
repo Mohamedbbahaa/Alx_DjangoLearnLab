@@ -2,11 +2,12 @@ from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
-from rest_framework.permissions import IsAuthenticated
+from rest_framework import permissions
 from rest_framework import status
 from .models import User
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 from django.contrib.auth import logout
+from rest_framework import generics
 # Create your views here.
 
 
@@ -33,7 +34,7 @@ class LoginView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class ProfileView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         user = request.user
@@ -41,7 +42,7 @@ class ProfileView(APIView):
         return Response(serializer.data)
 
 class LogoutView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
         return render(request, 'logout.html')
@@ -50,8 +51,8 @@ class LogoutView(APIView):
         logout(request)
         return Response(status=status.HTTP_204_NO_CONTENT)
     
-class follow_user(APIView):
-    permission_classes = [IsAuthenticated]
+class follow_user(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, user_id):
         try: 
@@ -64,8 +65,8 @@ class follow_user(APIView):
         except User.DoesNotExist:
             return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
     
-class unfollow_user(APIView):
-    permission_classes = [IsAuthenticated]
+class unfollow_user(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request, user_id):
         try: 
